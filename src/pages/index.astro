@@ -1,26 +1,18 @@
 ---
 import config from "@/config/config.json";
 import Base from "@/layouts/Base.astro";
-import Pagination from "@/layouts/components/Pagination.astro";
 import Posts from "@/layouts/Posts.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import DirectoryListingsWrapper from "@/components/DirectoryListingsWrapper.astro";
 const posts = await getSinglePage("posts");
 const sortedPosts = sortByDate(posts);
-const totalPages = Math.ceil(posts.length / config.settings.pagination);
-const currentPosts = sortedPosts.slice(0, config.settings.pagination);
+const currentPosts = sortedPosts.slice(0, 3);
 ---
 
 <Base>
   <section class="section">
-    <div class="container">
-      <Posts posts={currentPosts} className="mb-16" />
-      <Pagination currentPage={1} totalPages={totalPages} />
-    </div>
-  </section>
-  <section class="section">
-    <div class="container">
+    <div class="container" className="mb-16">
       <DirectoryListingsWrapper 
         title="Featured Wedding Vendors"
         sortBy="random"
@@ -28,6 +20,11 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
         showFilters={true}
         maxItems={32}
       />
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <Posts posts={currentPosts} className="mb-16" />
     </div>
   </section>
 </Base>
