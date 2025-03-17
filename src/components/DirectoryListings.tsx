@@ -171,7 +171,7 @@ const DirectoryListings: React.FC<DirectoryListingsProps> = ({
 
   return (
     <div className="directory-listings">
-      {title && <h2 className="text-center mb-8">{title}</h2>}
+      {title && <h1 className="text-center mb-8">{title}</h1>}
       
       {/* Filters - only show if showFilters is true */}
       {showFilters && (
