@@ -1,0 +1,146 @@
+---
+import Base from "@/layouts/Base.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import DirectoryFilter from "@/layouts/DirectoryFilter.tsx";
+import { markdownify, slugify } from "@/lib/utils/textConverter";
+import { getEntry } from "astro:content";
+import DirectoryListingsWrapper from "@/components/DirectoryListingsWrapper.astro";
+import { FALSE } from "sass";
+
+// Get all directory entries
+const directoryItems = await getSinglePage("directory");
+
+// Sort items: featured first, then randomize each group
+const sortedItems = [...directoryItems].sort((a, b) => {
+  // Featured items come first
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  
+  // Within each group (featured/non-featured), randomize
+  return Math.random() - 0.5;
+});
+
+// Debug the entries to ensure they have slugs
+console.log("Directory entries for index:", sortedItems.map(entry => ({
+  title: entry.data.title,
+  slug: entry.slug,
+  hasSlug: Boolean(entry.slug)
+})));
+
+// Ensure all entries have a slug
+const entriesWithSlugs = sortedItems.map(entry => {
+  if (!entry.slug) {
+    // If no slug exists, create one from the title
+    entry.slug = slugify(entry.data.title);
+    console.log(`Created slug for ${entry.data.title}: ${entry.slug}`);
+  }
+  return entry;
+});
+
+// Get all unique categories
+const allCategories = [
+  ...new Set(
+    entriesWithSlugs.flatMap((entry) => entry.data.category)
+  ),
+].sort();
+
+// Debug a few entries to understand the location structure
+console.log("Sample entries with location data:", entriesWithSlugs.slice(0, 3).map(entry => ({
+  title: entry.data.title,
+  location: entry.data.location,
+  locationType: entry.data.location ? typeof entry.data.location : 'undefined'
+})));
+
+// Get all unique locations - try different approaches based on data structure
+let allLocations = [];
+
+// Try to extract locations from different possible structures
+entriesWithSlugs.forEach(entry => {
+  if (!entry.data.location) return;
+  
+  // If location is an array
+  if (Array.isArray(entry.data.location)) {
+    entry.data.location.forEach(loc => {
+      if (loc && typeof loc === 'string' && loc.trim()) {
+        allLocations.push(loc.trim());
+      }
+    });
+  } 
+  // If location is a string
+  else if (typeof entry.data.location === 'string' && entry.data.location.trim()) {
+    allLocations.push(entry.data.location.trim());
+  }
+  // If location is an object with a name property (just in case)
+  else if (typeof entry.data.location === 'object' && entry.data.location?.name) {
+    allLocations.push(entry.data.location.name.trim());
+  }
+});
+
+// Remove duplicates and sort
+allLocations = [...new Set(allLocations)].sort();
+
+console.log("Extracted locations:", allLocations);
+
+// Get page data
+const pageEntry = await getEntry("pages", "directory");
+const { Content } = await pageEntry.render();
+---
+
+<Base title={pageEntry.data.title}>
+  <section class="section">
+    <div class="container">
+      <h1 class="text-center font-normal" set:html={markdownify(pageEntry.data.title)} />
+        <div class="section row pb-0">
+          <div class="mx-auto text-center md:col-10 lg:col-7">
+            <Content />
+          </div>
+        </div>
+        <div class="section row pb-0">
+          <DirectoryListingsWrapper 
+            featuredOnly={false}
+            showFilters={true}
+          />
+        </div>
+        
+        <!-- Category and Location Links -->
+        <div class="mt-16 pt-8 border-t border-border">
+          <div class="row">
+            <!-- Categories Section -->
+            <div class="md:col-6 mb-10 md:mb-0">
+              <h2 class="h4 mb-6 text-center md:text-left">Browse by Category</h2>
+              <ul class="flex flex-wrap gap-3">
+                {allCategories.map((category) => (
+                  <li>
+                    <a 
+                      href={`/directory/category/${slugify(category)}/`}
+                      class="inline-block px-4 py-2 bg-theme-light rounded-lg hover:bg-primary hover:text-white transition duration-300"
+                    >
+                      {category}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <!-- Locations Section -->
+            <div class="md:col-6">
+              <h2 class="h4 mb-6 text-center md:text-left">Browse by Location</h2>
+              <ul class="flex flex-wrap gap-3">
+                {allLocations.map((location) => (
+                  <li>
+                    <a 
+                      href={`/directory/location/${slugify(location)}/`}
+                      class="inline-block px-4 py-2 bg-theme-light rounded-lg hover:bg-primary hover:text-white transition duration-300"
+                    >
+                      {location}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

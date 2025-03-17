@@ -1,0 +1,150 @@
+---
+import Base from "@/layouts/Base.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+
+export async function getStaticPaths() {
+  const directoryItems = await getSinglePage("directory");
+  
+  // Get all unique categories
+  const categories = [
+    ...new Set(
+      directoryItems.flatMap((item) => item.data.category)
+    ),
+  ];
+  
+  return categories.map((category) => {
+    return {
+      params: { category: slugify(category) },
+      props: { category, directoryItems },
+    };
+  });
+}
+
+const { category, directoryItems } = Astro.props;
+
+// Filter vendors by the current category
+const filteredVendors = directoryItems.filter((item) =>
+  item.data.category.some((cat) => slugify(cat) === slugify(category))
+);
+
+// Ensure each vendor has a slug
+// Sort vendors: featured first, then randomize each group
+const vendorsWithSlugs = filteredVendors.map(item => {
+  if (!item.slug) {
+    console.warn(`Missing slug for vendor: ${item.data.title}`);
+    return {
+      ...item,
+      slug: slugify(item.data.title)
+    };
+  }
+  return item;
+}).sort((a, b) => {
+  // Featured items come first
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  
+  // Within each group (featured/non-featured), randomize
+  return Math.random() - 0.5;
+});
+---
+
+<Base title={`${humanize(category)} Vendors`}>
+  <section class="section">
+    <div class="container">
+      <h1 class="text-center font-normal mb-10">{humanize(category)} Vendors</h1>
+      
+      {vendorsWithSlugs.length > 0 ? (
+        <div class="row">
+          {vendorsWithSlugs.map((item) => (
+            <div class="mb-8 md:col-6 lg:col-4">
+              <div class="bg-theme-light rounded p-4 hover:shadow-lg transition duration-300">
+                {item.data.image && (
+                  <a
+                    href={`/directory/${item.slug}/`}
+                    class="block mb-4 overflow-hidden rounded"
+                  >
+                    <img
+                      src={item.data.image}
+                      alt={item.data.title}
+                      class="w-full h-48 object-cover object-top hover:scale-105 transition duration-300"
+                    />
+                  </a>
+                )}
+                
+                <div class="flex items-center justify-between mb-4">
+                  {item.data.logo ? (
+                    <img
+                      src={item.data.logo}
+                      alt={item.data.title}
+                      class="h-16 w-auto lg:max-w-[180px] xl:max-w-[180px] object-contain"
+                    />
+                  ) : (
+                    <h3 class="h5">{item.data.title}</h3>
+                  )}
+                  {item.data.featured && (
+                    <span class="bg-primary text-white text-xs px-2 py-1 rounded">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                
+                {item.data.description && (
+                  <p class="text-sm mb-4 line-clamp-3">{item.data.description}</p>
+                )}
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                  {item.data.category.map((cat) => (
+                    <span class="bg-white text-xs px-2 py-1 rounded">
+                      {humanize(cat)}
+                    </span>
+                  ))}
+                </div>
+                
+                <div>
+                  <a
+                    href={`/directory/${item.slug}/`}
+                    class="inline-block text-normal font-semibold hover:underline"
+                  >
+                    View Details
+                  </a>
+                  {item.data.website && (
+                    <a
+                      href={item.data.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-block ml-4 text-primary hover:underline"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-10">
+          <p>No vendors found in this category.</p>
+        </div>
+      )}
+      
+      <div class="text-center mt-10">
+        <a href="/directory/" class="btn btn-primary">Back to Directory</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+
+<!-- Update the category display with fixed icon sizes and top alignment -->
+<div class="flex items-start mb-4">
+  <span class="inline-block w-5 h-5 mr-2 flex-shrink-0 mt-1">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+    </svg>
+  </span>
+  <div>
+    <h2 class="text-xl font-medium">{humanize(category)}</h2>
+  </div>
+</div>

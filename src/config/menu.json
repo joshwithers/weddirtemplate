@@ -1,0 +1,50 @@
+{
+  "main": [
+    {
+      "name": "Home",
+      "url": "/"
+    },
+    {
+      "name": "Blog",
+      "url": "/blog/"
+    },
+    {
+      "name": "Directory",
+      "url": "/directory/"
+    },
+    {
+      "name": "About",
+      "url": "/about/"
+    },
+    {
+      "name": "Contact",
+      "url": "/contact/"
+    }
+  ],
+  "footer": [
+    {
+      "name": "Join Wedding Directory",
+      "url": "https://tally.so/r/3xvza9"
+    },
+    {
+      "name": Submit Blog Post",
+      "url": "https://tally.so/r/3xvjLy"
+    }
+    {
+      "name": "About",
+      "url": "/about/"
+    },
+    {
+      "name": "Blog",
+      "url": "/blog/"
+    },
+    {
+      "name": "Directory",
+      "url": "/directory/"
+    },
+    {
+      "name": "Contact",
+      "url": "/contact/"
+    }
+  ]
+}

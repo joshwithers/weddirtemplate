@@ -1,0 +1,131 @@
+---
+import Share from "@/components/Share.astro";
+import SimilarPosts from "@/components/SimilarPosts.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import dateFormat from "@/lib/utils/dateFormat";
+import similerItems from "@/lib/utils/similarItems";
+import { humanize, markdownify, slugify, plainify } from "@/lib/utils/textConverter";
+import { Image } from "astro:assets";
+import { render } from "astro:content";
+import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
+import config from "@/config/config.json";
+
+const allAuthors = await getSinglePage("authors");
+const posts = await getSinglePage("posts");
+const { post } = Astro.props;
+const similarPosts = similerItems(post, posts, post.slug);
+const { Content } = await render(post);
+const { title, description, authors, categories, image, date, tags } = post.data;
+
+const postUrl = `${config.site.base_url}/${post.slug}`;
+const postAuthors = authors
+  ? allAuthors.filter((author) => authors.includes(author.slug))
+  : [];
+---
+
+<!-- Schema.org markup for BlogPosting -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": postUrl
+  },
+  "headline": title,
+  "description": description || plainify(post.body).slice(0, 160),
+  "image": [
+    image ? (
+      image.toString().startsWith('http') ? image : `${config.site.base_url}${image.toString().startsWith('/') ? '' : '/'}${image}`
+    ) : `${config.site.base_url}/default-post-image.jpg`
+  ],
+  "datePublished": date ? new Date(date).toISOString() : new Date().toISOString(),
+  "dateModified": date ? new Date(date).toISOString() : new Date().toISOString(),
+  "author": {
+    "@type": "Person",
+    "name": postAuthors.length > 0 ? postAuthors[0].data.title : (config.metadata.author || "Jarra"),
+    "url": postAuthors.length > 0 
+      ? `${config.site.base_url}/authors/${postAuthors[0].slug}`
+      : `${config.site.base_url}/about`
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": config.site.title,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${config.site.base_url}/images/logo.png`,
+      "width": "600",
+      "height": "60"
+    }
+  },
+  "articleSection": categories ? categories[0] : "General",
+  "keywords": categories ? categories.join(", ") : "",
+  "inLanguage": "en-US"
+})} />
+
+<section class="section">
+  <div class="container">
+    <article class="row justify-center">
+      <div class="md:col-10 text-center">
+        <h1 set:html={markdownify(title)} class="h2" />
+        <ul class="mt-4 flex flex-wrap items-center justify-center text-text">
+          <li class="mx-3 flex items-center flex-wrap font-medium">
+            <BiCalendarEdit className="mr-1 h-5 w-5 text-gray-600" />
+            {dateFormat(date)}
+          </li>
+          <li class="mx-3 flex items-center flex-wrap">
+            <BiCategoryAlt className="mr-1 h-[18px] w-[18px] text-gray-600" />
+
+            <ul>
+              {
+                categories.map((category: string, i: number) => (
+                  <li class="inline-block">
+                    <a
+                      href={`/categories/${slugify(category)}`}
+                      class="mr-2 hover:text-primary font-medium"
+                    >
+                      {humanize(category)}
+                      {i !== post.data.categories.length - 1 && ","}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-12 mt-8 mb-2">
+        {
+          image && (
+            <Image
+              src={image}
+              height={500}
+              width={1000}
+              alt={title}
+              class="rounded-lg"
+              loading="eager"
+            />
+          )
+        }
+      </div>
+
+      <div class="md:col-10">
+        <div class="content mb-16 text-left">
+          <Content />
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- similar posts -->
+{
+  similarPosts.length > 0 && (
+    <section class="section pt-0">
+      <div class="container">
+        <h2 class="mb-8 text-center h3">Similar Posts</h2>
+        <SimilarPosts posts={similarPosts.slice(0, 3)} />
+      </div>
+    </section>
+  )
+}

@@ -1,0 +1,53 @@
+---
+import DirectoryListings from './DirectoryListings';
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { slugify } from "@/lib/utils/textConverter";
+
+interface Props {
+  sortBy?: 'alphabetical' | 'date' | 'random';
+  featuredOnly?: boolean;
+  showFilters?: boolean;
+  title?: string;
+  maxItems?: number;
+}
+
+const { 
+  sortBy = 'alphabetical',
+  featuredOnly = false,
+  showFilters = true,
+  title,
+  maxItems
+} = Astro.props;
+
+// Get all directory entries
+const directoryItems = await getSinglePage("directory");
+
+// Ensure all entries have a slug and apply initial random sorting if needed
+const entriesWithSlugs = directoryItems.map(entry => {
+  if (!entry.slug) {
+    entry.slug = slugify(entry.data.title);
+  }
+  return entry;
+});
+
+// Apply random sorting at build time if needed
+if (sortBy === 'random') {
+  for (let i = entriesWithSlugs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [entriesWithSlugs[i], entriesWithSlugs[j]] = [entriesWithSlugs[j], entriesWithSlugs[i]];
+  }
+}
+
+// Debug the entries
+console.log(`Directory entries for ${title || 'listing'}:`, entriesWithSlugs.length);
+---
+
+<DirectoryListings 
+  items={entriesWithSlugs}
+  sortBy={sortBy === 'random' ? 'preserve' : sortBy}
+  featuredOnly={featuredOnly}
+  showFilters={showFilters}
+  title={title}
+  maxItems={maxItems}
+  client:load
+/>

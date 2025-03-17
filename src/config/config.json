@@ -1,0 +1,35 @@
+{
+  "site": {
+    "title": "The Best Wedding Directory",
+    "base_url": "https://finds.au",
+    "base_path": "/",
+    "trailing_slash": true,
+    "favicon": "/apple-touch-icon.png",
+    "logo": "/apple-touch-icon.png",
+    "logo_width": "20",
+    "logo_height": "20",
+    "logo_text": "The Wedding Directory"
+  },
+
+  "settings": {
+    "pagination": 100,
+    "summary_length": 100
+  },
+
+  "metadata": {
+    "meta_author": "Jarra Burrowill",
+    "meta_image": "/default.png",
+    "meta_description": "Connecting engaged couples with exceptional wedding professionals across Australia. Showcasing real weddings, unique venues and the talented creators who bring celebration to life."
+  },
+
+  "params": {
+    "contact_form_action": "#",
+    "copyright": "Copyright · The Wedding Directory"
+  },
+
+  "contactinfo": {
+    "address": "PO Box 47 <br/> Sandy Bay, Tasmania, 7005",
+    "email": "hello@finds.au",
+    "phone": "03 4233 6321"
+  }
+}

@@ -1,0 +1,150 @@
+---
+import Base from "@/layouts/Base.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+
+export async function getStaticPaths() {
+  const directoryItems = await getSinglePage("directory");
+  
+  // Get all unique locations
+  const locations = [
+    ...new Set(
+      directoryItems.flatMap((item) => item.data.location)
+    ),
+  ];
+  
+  return locations.map((location) => {
+    return {
+      params: { location: slugify(location) },
+      props: { location, directoryItems },
+    };
+  });
+}
+
+const { location, directoryItems } = Astro.props;
+
+// Filter vendors by the current location
+const filteredVendors = directoryItems.filter((item) =>
+  item.data.location.some((loc) => slugify(loc) === slugify(location))
+);
+
+// Sort vendors: featured first, then randomize each group
+const vendorsWithSlugs = filteredVendors.map(item => {
+  if (!item.slug) {
+    console.warn(`Missing slug for vendor: ${item.data.title}`);
+    return {
+      ...item,
+      slug: slugify(item.data.title)
+    };
+  }
+  return item;
+}).sort((a, b) => {
+  // Featured items come first
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  
+  // Within each group (featured/non-featured), randomize
+  return Math.random() - 0.5;
+});
+
+console.log("Vendors with slugs:", vendorsWithSlugs.map(v => `${v.data.title}: ${v.slug}`));
+---
+
+<Base title={`Wedding Vendors in ${humanize(location)}`}>
+  <section class="section">
+    <div class="container">
+      <h1 class="text-center font-normal mb-10">Wedding Vendors in {humanize(location)}</h1>
+      
+      {vendorsWithSlugs.length > 0 ? (
+        <div class="row">
+          {vendorsWithSlugs.map((item) => (
+            <div class="mb-8 md:col-6 lg:col-4">
+              <div class="bg-theme-light rounded p-4 hover:shadow-lg transition duration-300">
+                {item.data.image && (
+                  <a
+                    href={`/directory/${item.slug}/`}
+                    class="block mb-4 overflow-hidden rounded"
+                  >
+                    <img
+                      src={item.data.image}
+                      alt={item.data.title}
+                      class="w-full h-48 object-cover object-top hover:scale-105 transition duration-300"
+                    />
+                  </a>
+                )}
+                
+                <div class="flex items-center justify-between mb-4">
+                  {item.data.logo ? (
+                    <img
+                      src={item.data.logo}
+                      alt={item.data.title}
+                      class="h-16 w-auto lg:max-w-[180px] xl:max-w-[180px] object-contain"
+                    />
+                  ) : (
+                    <h3 class="h5">{item.data.title}</h3>
+                  )}
+                  {item.data.featured && (
+                    <span class="bg-primary text-white text-xs px-2 py-1 rounded">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                
+                {item.data.description && (
+                  <p class="text-sm mb-4 line-clamp-3">{item.data.description}</p>
+                )}
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                  {item.data.category.map((cat) => (
+                    <span class="bg-white text-xs px-2 py-1 rounded">
+                      {humanize(cat)}
+                    </span>
+                  ))}
+                </div>
+                
+                <div>
+                  <a
+                    href={`/directory/${item.slug}/`}
+                    class="inline-block text-normal font-semibold hover:underline"
+                  >
+                    View Details
+                  </a>
+                  {item.data.website && (
+                    <a
+                      href={item.data.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-block ml-4 text-primary hover:underline"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-10">
+          <p>No vendors found in this location.</p>
+        </div>
+      )}
+      
+      <div class="text-center mt-10">
+        <a href="/directory/" class="btn btn-primary">Back to Directory</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<!-- Update the location display with fixed icon sizes and top alignment -->
+<div class="flex items-start mb-4">
+  <span class="inline-block w-5 h-5 mr-2 flex-shrink-0 mt-1">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+    </svg>
+  </span>
+  <div>
+    <h2 class="text-xl font-medium">{humanize(location)}</h2>
+  </div>
+</div>

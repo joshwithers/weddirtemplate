@@ -1,0 +1,75 @@
+---
+import { Image } from "astro:assets";
+import { humanize } from "@/lib/utils/textConverter";
+
+const { item } = Astro.props;
+---
+
+<div class="mb-8 md:col-6 lg:col-4">
+  <div class="bg-theme-light rounded p-4 hover:shadow-lg transition duration-300">
+    {item.data.image && (
+      <a
+        href={`/directory/${item.slug}/`}
+        class="block mb-4 overflow-hidden rounded"
+      >
+        <Image
+          src={item.data.image}
+          alt={item.data.title}
+          width={400}
+          height={300}
+          class="w-full h-48 object-cover object-top hover:scale-105 transition duration-300"
+        />
+      </a>
+    )}
+    
+    <div class="flex items-center justify-between mb-4">
+      {item.data.logo ? (
+        <Image
+          src={item.data.logo}
+          alt={item.data.title}
+          width={180}
+          height={64}
+          class="h-16 w-auto lg:max-w-[180px] xl:max-w-[180px] object-contain"
+        />
+      ) : (
+        <h2 class="h5">{item.data.title}</h2>
+      )}
+      {item.data.featured && (
+        <span class="bg-normal text-normal text-xs px-2 py-1 rounded">
+          Featured
+        </span>
+      )}
+    </div>
+    
+    {item.data.description && (
+      <p class="text-sm mb-4 line-clamp-3">{item.data.description}</p>
+    )}
+    
+    <div class="flex flex-wrap gap-2 mb-4">
+      {item.data.category.map((cat) => (
+        <span class="bg-white text-xs px-2 py-1 rounded">
+          {humanize(cat)}
+        </span>
+      ))}
+    </div>
+    
+    <div class="mt-auto">
+      <a
+        href={`/directory/${item.slug}/`}
+        class="inline-block text-normal font-semibold hover:underline"
+      >
+        View Details
+      </a>
+      {item.data.website && (
+        <a
+          href={item.data.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block ml-4 text-primary hover:underline"
+        >
+          Visit Website
+        </a>
+      )}
+    </div>
+  </div>
+</div>
