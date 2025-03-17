@@ -57,7 +57,7 @@ const postsCollection = defineCollection({
 
 // Wedding Directory collection schema
 const directoryCollection = defineCollection({
-  loader: glob({ pattern: "**/*.{md,mdx}", base: "src/content/directory" }),
+  // Remove the custom glob loader and use default collection behavior
   schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
@@ -72,6 +72,7 @@ const directoryCollection = defineCollection({
     category: z.array(z.string()).default(["Other"]),
     featured: z.boolean().optional(),
     draft: z.boolean().optional(),
+    slug: z.string().optional(),  // Add this line
     social: z
       .object({
         facebook: z.string().url().optional(),
