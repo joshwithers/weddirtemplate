@@ -4,6 +4,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
 import { BiGlobe, BiEnvelope, BiPhone, BiMap, BiCategory } from "react-icons/bi";
 import { Image } from "astro:assets";
+import { render } from "astro:content";  // Add this import
 
 export async function getStaticPaths() {
   // Try to get directory entries using getSinglePage
@@ -32,6 +33,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
+const { Content } = await render(entry); // Add this line
 
 // Get related vendors
 const allVendors = await getSinglePage("directory");
@@ -253,7 +255,7 @@ if (entry.data.category && entry.data.category.length > 0) {
       </div>
       
       <div class="content mt-12">
-        {entry.body && <div set:html={markdownify(entry.body)} />}
+        {entry.body && <Content />}
       </div>
       
       {relatedVendors.length > 0 && (
